@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.programacionmovil.ui.theme.ProgramacionMovilTheme
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.MaterialTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,8 +35,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
-        text = "Hello $name!",
-        modifier = modifier
+        text = "Bienvenido al curso 2026, $name",
+        color = Color.Blue,
+        style = MaterialTheme.typography.headlineMedium
     )
 }
 
