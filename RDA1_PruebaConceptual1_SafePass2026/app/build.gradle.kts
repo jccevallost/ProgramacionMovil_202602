@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android) // Corregido: antes tenías 'jetbrains.kotlin'
-    alias(libs.plugins.kotlin.compose) // Corregido: para habilitar Compose Compiler 2.0
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
