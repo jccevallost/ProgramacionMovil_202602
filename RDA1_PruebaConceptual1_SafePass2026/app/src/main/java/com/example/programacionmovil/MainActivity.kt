@@ -64,7 +64,7 @@ fun realizarRegistro(
         } else {
             // 3. Si es número, validamos la regla de negocio con la Extension Function [cite: 15]
             if (!edadConvertida.esMayorDeEdad()) {
-                onResult(RegistroState.Error("Acceso denegado: El asistente debe ser mayor de 18 años."))
+                onResult(RegistroState.Error("Acceso denegado: El asistente debe ser mayor de 18 años cumplidos."))
             } else {
                 // Registro exitoso usando Scope Functions [cite: 18]
                 val asistenteValido = Asistente(nombreLimpio, edadConvertida, tipo).apply {
