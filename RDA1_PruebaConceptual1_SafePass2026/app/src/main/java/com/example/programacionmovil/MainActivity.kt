@@ -79,6 +79,7 @@ fun realizarRegistro(
 
 // 5. Interfaz en Compose con Scaffold y when exhaustivo
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun SafePassScreen() {
     var nombre by remember { mutableStateOf("") }
     var edad by remember { mutableStateOf("") }
