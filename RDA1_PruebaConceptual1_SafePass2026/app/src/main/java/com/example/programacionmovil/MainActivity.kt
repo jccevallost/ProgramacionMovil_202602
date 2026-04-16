@@ -43,31 +43,36 @@ fun realizarRegistro(
     nom: String,
     ed: String,
     tipo: String,
-    validarPrioridad: (String) -> String, // Higher-order function
+    validarPrioridad: (String) -> String,
     onResult: (RegistroState) -> Unit
 ) {
     run {
-        val edadLimpia = ed.toIntOrNull() // Validación segura
         val nombreLimpio = nom.trim().takeIf { it.isNotEmpty() }
 
-        if (nombreLimpio != null) {
-            // Uso de 'let' para seguridad de nulos
-            nombreLimpio.let { n ->
-                val edadFinal = edadLimpia ?: 0 // Operador Elvis
-
-                if (!edadFinal.esMayorDeEdad()) {
-                    onResult(RegistroState.Error("Debe ser mayor de edad para ingresar."))
-                } else {
-                    // Uso de 'apply' para configurar el objeto
-                    val nuevo = Asistente(n, edadLimpia, tipo).apply {
-                        println("Registrando asistente: $nombre")
-                    }
-                    val prioridad = validarPrioridad(tipo)
-                    onResult(RegistroState.Success(nuevo, prioridad))
-                }
-            }
-        } else {
+        // 1. Validamos que el nombre no esté vacío
+        if (nombreLimpio == null) {
             onResult(RegistroState.Error("El nombre es obligatorio."))
+            return@run
+        }
+
+        // 2. Intentamos convertir la edad
+        val edadConvertida = ed.toIntOrNull()
+
+        if (edadConvertida == null) {
+            // Error elegante si se ingresan letras [cite: 26, 27]
+            onResult(RegistroState.Error("Ingresa un valor numérico válido en la edad."))
+        } else {
+            // 3. Si es número, validamos la regla de negocio con la Extension Function [cite: 15]
+            if (!edadConvertida.esMayorDeEdad()) {
+                onResult(RegistroState.Error("Acceso denegado: El asistente debe ser mayor de 18 años."))
+            } else {
+                // Registro exitoso usando Scope Functions [cite: 18]
+                val asistenteValido = Asistente(nombreLimpio, edadConvertida, tipo).apply {
+                    println("Auditoría: Registro exitoso para $nombre")
+                }
+                val mensajePrioridad = validarPrioridad(tipo)
+                onResult(RegistroState.Success(asistenteValido, mensajePrioridad))
+            }
         }
     }
 }
