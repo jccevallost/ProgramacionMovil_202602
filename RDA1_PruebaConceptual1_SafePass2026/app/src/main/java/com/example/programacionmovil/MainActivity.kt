@@ -82,7 +82,9 @@ fun realizarRegistro(
 fun SafePassScreen() {
     var nombre by remember { mutableStateOf("") }
     var edad by remember { mutableStateOf("") }
-    var tipo by remember { mutableStateOf("General") }
+    var tipoEntrada by remember { mutableStateOf("General") } // Valor por defecto
+    var menuExpandido by remember { mutableStateOf(false) }   // Controla si el menú está abierto
+    val opcionesEntrada = listOf("General", "VIP", "Cortesía") // Lista de opciones para el TechEvent 2026 [cite: 8, 9]
     var estado by remember { mutableStateOf<RegistroState>(RegistroState.Idle) }
 
     Scaffold { padding ->
@@ -90,13 +92,64 @@ fun SafePassScreen() {
             Text("SafePass 2026 - TechEvent", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") })
-            OutlinedTextField(value = edad, onValueChange = { edad = it }, label = { Text("Edad") })
-            OutlinedTextField(value = tipo, onValueChange = { tipo = it }, label = { Text("Tipo Entrada (VIP/General)") })
+            OutlinedTextField(
+                value = nombre,
+                onValueChange = { nombre = it },
+                label = { Text("Nombre del Asistente") },
+                isError = nombre.isBlank(), // Se pone rojo si está vacío [cite: 30]
+                supportingText = {
+                    if (nombre.isBlank()) Text("El nombre es obligatorio")
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = edad,
+                onValueChange = { edad = it },
+                label = { Text("Edad") },
+                // REQUISITO: KeyboardOptions para mejorar la experiencia de usuario
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            // Contenedor del menú desplegable
+            ExposedDropdownMenuBox(
+                expanded = menuExpandido,
+                onExpandedChange = { menuExpandido = !menuExpandido },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = tipoEntrada,
+                    onValueChange = {},
+                    readOnly = true, // Evita que el usuario escriba manualmente [cite: 24]
+                    label = { Text("Tipo de Entrada") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = menuExpandido) },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = menuExpandido,
+                    onDismissRequest = { menuExpandido = false }
+                ) {
+                    opcionesEntrada.forEach { opcion ->
+                        DropdownMenuItem(
+                            text = { Text(opcion) },
+                            onClick = {
+                                tipoEntrada = opcion
+                                menuExpandido = false
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                        )
+                    }
+                }
+            }
 
             Button(
                 onClick = {
-                    realizarRegistro(nombre, edad, tipo, { t ->
+                    realizarRegistro(nombre, edad, tipoEntrada, { t ->
                         if(t.uppercase() == "VIP") "Prioridad Alta" else "Prioridad Estándar"
                     }) { estado = it }
                 },
