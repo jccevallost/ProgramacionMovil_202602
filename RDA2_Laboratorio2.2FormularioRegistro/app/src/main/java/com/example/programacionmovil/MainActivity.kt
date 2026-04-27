@@ -108,7 +108,9 @@ fun ResilientFormScreen(viewModel: FormViewModel) {
 
         OutlinedTextField(
             value = viewModel.email,
-            onValueChange = { viewModel.updateEmail(it) },
+            onValueChange = {
+                viewModel.updateEmail(it)
+            },
             label = { Text("Correo Electrónico") },
             modifier = Modifier.fillMaxWidth()
         )

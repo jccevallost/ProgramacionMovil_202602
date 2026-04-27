@@ -8,7 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.programacionmovil.data.UserPreferences
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class FormViewModel(
@@ -22,17 +24,42 @@ class FormViewModel(
     var saveSuccess by mutableStateOf(false)
         private set
 
+    private var saveIndicatorJob: Job? = null
+
     val nombreDesdeDisco = userPrefs.userName.asLiveData()
+
+    init {
+        viewModelScope.launch {
+            userPrefs.userEmail.collectLatest { emailGuardado ->
+                if (emailGuardado.isNotEmpty()) {
+                    email = emailGuardado
+                    stateHandle["email_key"] = emailGuardado
+                }
+            }
+        }
+    }
 
     fun updateEmail(newEmail: String) {
         email = newEmail
         stateHandle["email_key"] = newEmail
+
+        viewModelScope.launch {
+            userPrefs.saveEmail(newEmail)
+            mostrarIndicadorGuardado()
+        }
     }
 
     fun guardarNombre(newName: String) {
         viewModelScope.launch {
             userPrefs.saveName(newName)
+            mostrarIndicadorGuardado()
+        }
+    }
 
+    private fun mostrarIndicadorGuardado() {
+        saveIndicatorJob?.cancel()
+
+        saveIndicatorJob = viewModelScope.launch {
             saveSuccess = true
             delay(1000)
             saveSuccess = false
