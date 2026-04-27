@@ -1,4 +1,3 @@
-// Archivo: MainActivity.kt
 package com.example.programacionmovil
 
 import android.os.Bundle
@@ -11,25 +10,24 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState // Importante para nameFromDisk
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.programacionmovil.data.UserPreferences
 import com.example.programacionmovil.ui.FormViewModel
 import com.example.programacionmovil.ui.theme.ProgramacionMovilTheme
-import androidx.lifecycle.viewmodel.CreationExtras
-
-// Delegados críticos para que 'by' funcione
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         val userPrefs = UserPreferences(applicationContext)
+
         enableEdgeToEdge()
 
         val viewModel: FormViewModel by viewModels {
@@ -63,9 +61,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun ResilientFormScreen(viewModel: FormViewModel) {
-    // Aquí usamos los nombres corregidos del ViewModel
+
     val nameFromDisk by viewModel.nombreDesdeDisco.observeAsState("")
-    var nameInput by remember(nameFromDisk) { mutableStateOf(nameFromDisk) }
+    var nameInput by remember(nameFromDisk) {
+        mutableStateOf(nameFromDisk)
+    }
 
     BackHandler(enabled = nameInput.isNotEmpty() || viewModel.email.isNotEmpty()) {
         Log.d("NAV", "El usuario intentó retroceder")
@@ -74,10 +74,24 @@ fun ResilientFormScreen(viewModel: FormViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .padding(24.dp)
-            .statusBarsPadding() // Evita que el texto choque con la barra de estado
     ) {
-        Text("Borrador de Perfil", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = "Borrador de Perfil",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        if (viewModel.saveSuccess) {
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "☁️ Guardado correctamente",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(

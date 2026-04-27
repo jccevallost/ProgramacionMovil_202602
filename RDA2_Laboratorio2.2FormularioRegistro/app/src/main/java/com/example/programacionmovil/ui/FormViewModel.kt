@@ -1,4 +1,3 @@
-// Archivo: ui/FormViewModel.kt
 package com.example.programacionmovil.ui
 
 import androidx.compose.runtime.getValue
@@ -9,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.programacionmovil.data.UserPreferences
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class FormViewModel(
@@ -17,6 +17,9 @@ class FormViewModel(
 ) : ViewModel() {
 
     var email by mutableStateOf(stateHandle.get<String>("email_key") ?: "")
+        private set
+
+    var saveSuccess by mutableStateOf(false)
         private set
 
     val nombreDesdeDisco = userPrefs.userName.asLiveData()
@@ -29,6 +32,10 @@ class FormViewModel(
     fun guardarNombre(newName: String) {
         viewModelScope.launch {
             userPrefs.saveName(newName)
+
+            saveSuccess = true
+            delay(1000)
+            saveSuccess = false
         }
     }
 }
