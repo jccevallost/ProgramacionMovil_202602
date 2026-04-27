@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.example.programacionmovil"
-    compileSdk = 36 // Requisito API 36 [cite: 31, 33]
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.programacionmovil"
         minSdk = 26
-        targetSdk = 36 // Requisito API 36 [cite: 31, 33]
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -45,7 +45,7 @@ android {
 }
 
 dependencies {
-    // Estas referencias ahora coinciden 100% con tu [libraries] del .toml
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
