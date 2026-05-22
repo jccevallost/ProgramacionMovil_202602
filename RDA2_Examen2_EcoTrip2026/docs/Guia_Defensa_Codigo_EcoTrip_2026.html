@@ -1,0 +1,203 @@
+﻿<!doctype html><html><head><meta charset="utf-8"><title>Guia de Defensa Tecnica - EcoTrip 2026</title><style>@page{margin:18mm}body{font-family:Segoe UI,Arial,sans-serif;color:#17201b;line-height:1.45;font-size:12px}h1{font-size:26px;color:#215c42;margin:0 0 18px}h2{font-size:18px;color:#215c42;border-bottom:1px solid #b8d8c7;padding-bottom:4px;margin-top:22px}h3{font-size:14px;color:#2c6478;margin-top:16px}code{font-family:Consolas,monospace;background:#eef5f0;padding:1px 4px;border-radius:3px}pre{background:#f3f6f8;border-left:4px solid #2f6f4e;padding:10px;white-space:pre-wrap}li{margin:3px 0}.note{background:#f2fbf5;border:1px solid #c9e8d3;padding:10px;border-radius:6px}</style></head><body>
+<h1>Guia de Defensa Tecnica - EcoTrip 2026</h1>
+<h2>1. Resumen rapido para explicar al profesor</h2>
+<p>EcoTrip 2026 es una aplicacion Android nativa hecha con Kotlin y Jetpack Compose. Tiene dos pantallas: una pantalla de configuracion del viaje y una pantalla de resumen tipado. La arquitectura separa el modelo de datos, la persistencia local, el ViewModel y la interfaz declarativa.</p>
+<p>La idea central es evitar perdida de datos ante recomposicion, rotacion de pantalla, muerte del proceso y cierre completo de la app. Para eso se usan tres niveles de resiliencia:</p>
+<ul>
+<li>ViewModel: mantiene estado mientras el proceso sigue vivo.</li>
+<li>SavedStateHandle: restaura campos si Android destruye y recrea la actividad.</li>
+<li>DataStore: guarda preferencias en disco para recuperarlas despues de cerrar totalmente la app.</li>
+</ul>
+<h2>2. Archivos principales y que hace cada uno</h2>
+<h3>MainActivity.kt</h3>
+<p>Ubicacion: <code>app/src/main/java/com/example/programacionmovil/MainActivity.kt</code></p>
+<p>Es el punto de entrada de la app. Activa <code>enableEdgeToEdge()</code>, crea el <code>EcoTripViewModel</code> usando su <code>Factory</code> y carga la interfaz con <code>setContent</code>. Dentro de <code>setContent</code> se aplica <code>ProgramacionMovilTheme</code> para que toda la app use Material 3 y color dinamico.</p>
+<p>Si el profesor pregunta por que no hay XML: porque toda la UI se monta desde Compose con <code>setContent</code>, sin <code>findViewById</code> ni layouts tradicionales.</p>
+<h3>PreferenciaViaje.kt</h3>
+<p>Ubicacion: <code>app/src/main/java/com/example/programacionmovil/data/PreferenciaViaje.kt</code></p>
+<p>Contiene el modelo principal pedido por el PDF:</p>
+<ul>
+<li><code>nombreViajero</code></li>
+<li><code>destino</code></li>
+<li><code>diasDuracion</code></li>
+<li><code>tipoTransporte</code></li>
+<li><code>soloRutasBajaHuella</code></li>
+</ul>
+<p>Tambien define <code>TipoTransporteEcologico</code>, un <code>enum class</code> con Tren, Bicicleta y Vehiculo electrico. La funcion <code>generarRecomendacionRuta()</code> crea un resumen calculado para la pantalla 2: distancia estimada, emisiones, ahorro de CO2 y tramos sugeridos.</p>
+<p>Si el profesor pide agregar otro transporte, se cambia aqui: se agrega una entrada nueva al enum y un caso en el <code>when</code> de <code>generarRecomendacionRuta()</code>.</p>
+<h3>PreferenciaViajeRepository.kt</h3>
+<p>Ubicacion: <code>app/src/main/java/com/example/programacionmovil/data/PreferenciaViajeRepository.kt</code></p>
+<p>Es la capa de persistencia en disco. Usa Preferences DataStore con el archivo <code>ecotrip_preferencias</code>. Expone un <code>Flow&lt;PreferenciaViaje&gt;</code> para leer preferencias de forma reactiva y una funcion <code>guardar()</code> para escribir valores.</p>
+<p>DataStore se usa para preferencias globales permanentes. Si el usuario cierra la app por completo, los datos validos guardados pueden recuperarse en el siguiente inicio.</p>
+<h3>EcoTripUiState.kt</h3>
+<p>Ubicacion: <code>app/src/main/java/com/example/programacionmovil/ui/EcoTripUiState.kt</code></p>
+<p>Representa el estado que consume Compose. Guarda los textos tal como se ven en pantalla y calcula validaciones:</p>
+<ul>
+<li><code>nombreValido</code></li>
+<li><code>destinoValido</code></li>
+<li><code>diasValidos</code></li>
+<li><code>esValido</code></li>
+<li><code>preferenciaValida</code></li>
+</ul>
+<p>El punto clave es <code>diasDuracionTexto.toIntOrNull()</code>: evita crashes si el campo esta vacio o tiene un valor no numerico.</p>
+<h3>EcoTripViewModel.kt</h3>
+<p>Ubicacion: <code>app/src/main/java/com/example/programacionmovil/ui/EcoTripViewModel.kt</code></p>
+<p>Es la unica fuente de verdad de la UI. Recibe eventos desde las pantallas y actualiza el <code>SavedStateHandle</code>. Expone <code>uiState</code> como <code>StateFlow</code>.</p>
+<p>Responsabilidades:</p>
+<ul>
+<li>Guardar campos temporales en <code>SavedStateHandle</code>.</li>
+<li>Filtrar entradas numericas con <code>value.filter(Char::isDigit)</code>.</li>
+<li>Restaurar desde DataStore si la app abre sin estado previo.</li>
+<li>Guardar preferencias validas en disco.</li>
+<li>Emitir mensajes de error o exito para el Snackbar.</li>
+</ul>
+<p>Si el profesor pregunta por UDF: los eventos suben desde la UI al ViewModel, y el estado baja desde <code>uiState</code> hacia Compose.</p>
+<h3>EcoTripRoutes.kt</h3>
+<p>Ubicacion: <code>app/src/main/java/com/example/programacionmovil/navigation/EcoTripRoutes.kt</code></p>
+<p>Define rutas fuertemente tipadas con <code>@Serializable</code>:</p>
+<ul>
+<li><code>FormularioViajeRoute</code></li>
+<li><code>ResumenRutaRoute</code></li>
+</ul>
+<p><code>ResumenRutaRoute</code> exige parametros estrictos: nombre, destino, dias, transporte y bandera de baja huella. Esto reduce errores porque el compilador verifica el contrato de navegacion.</p>
+<h3>EcoTripApp.kt</h3>
+<p>Ubicacion: <code>app/src/main/java/com/example/programacionmovil/ui/EcoTripApp.kt</code></p>
+<p>Contiene el <code>NavHost</code>. La pantalla inicial es <code>FormularioViajeRoute</code>. Al planificar, navega a <code>ResumenRutaRoute</code> pasando argumentos tipados.</p>
+<p>Tambien aplica higiene del Back Stack con:</p>
+<ul>
+<li><code>launchSingleTop = true</code></li>
+<li><code>popUpTo&lt;FormularioViajeRoute&gt; { ... }</code></li>
+</ul>
+<p>Esto evita acumulacion de pantallas duplicadas.</p>
+<h3>EcoTripScreens.kt</h3>
+<p>Ubicacion: <code>app/src/main/java/com/example/programacionmovil/ui/EcoTripScreens.kt</code></p>
+<p>Contiene las dos pantallas Compose.</p>
+<p><code>FormularioViajeScreen</code> usa:</p>
+<ul>
+<li><code>Scaffold</code></li>
+<li><code>CenterAlignedTopAppBar</code></li>
+<li><code>FloatingActionButton</code></li>
+<li><code>OutlinedTextField</code></li>
+<li><code>FilterChip</code></li>
+<li><code>Switch</code></li>
+<li><code>SnackbarHost</code></li>
+</ul>
+<p><code>ResumenRutaScreen</code> recibe la ruta tipada, reconstruye una <code>PreferenciaViaje</code> y muestra la configuracion formateada. Usa colores semanticos de <code>MaterialTheme.colorScheme</code>, por eso responde al color dinamico de Android.</p>
+<h3>Theme.kt y Color.kt</h3>
+<p>Ubicacion: <code>app/src/main/java/com/example/programacionmovil/ui/theme/</code></p>
+<p><code>Theme.kt</code> activa Material You con:</p>
+<ul>
+<li><code>dynamicLightColorScheme(context)</code></li>
+<li><code>dynamicDarkColorScheme(context)</code></li>
+</ul>
+<p>Los colores de <code>Color.kt</code> solo son fallback para dispositivos sin color dinamico. La UI no depende de hexadecimales directos, sino de roles semanticos como <code>primaryContainer</code>, <code>secondaryContainer</code> y <code>tertiaryContainer</code>.</p>
+<h2>3. Checklist de cumplimiento contra el PDF</h2>
+<ul>
+<li>compileSdk 36 y targetSdk 36: cumplido en <code>app/build.gradle.kts</code>.</li>
+<li>Java/JBR 21: cumplido con <code>sourceCompatibility</code>, <code>targetCompatibility</code>, <code>jvmTarget</code> y <code>org.gradle.java.home</code>.</li>
+<li>Catalogo de versiones: cumplido en <code>gradle/libs.versions.toml</code>.</li>
+<li>Jetpack Compose sin XML de vistas: cumplido.</li>
+<li>Dos pantallas principales: cumplido.</li>
+<li>Scaffold, TopAppBar y FAB: cumplido.</li>
+<li>Modelo <code>PreferenciaViaje</code> inmutable con <code>val</code>: cumplido.</li>
+<li>Tipo de transporte ecologico: cumplido con <code>TipoTransporteEcologico</code>.</li>
+<li>Switch de baja huella: cumplido con <code>soloRutasBajaHuella</code>.</li>
+<li>ViewModel como fuente unica de verdad: cumplido.</li>
+<li>SavedStateHandle para estado temporal: cumplido.</li>
+<li>DataStore para preferencias permanentes: cumplido.</li>
+<li>Navegacion type-safe con <code>@Serializable</code>: cumplido.</li>
+<li><code>popUpTo</code> y <code>launchSingleTop</code>: cumplido.</li>
+<li>Material 3 y color dinamico: cumplido.</li>
+<li>Validacion segura con <code>toIntOrNull()</code>: cumplido.</li>
+<li>Pruebas unitarias basicas: cumplido con <code>EcoTripStateTest</code>.</li>
+</ul>
+<p>Pendiente operativo fuera del codigo:</p>
+<ul>
+<li>Ejecutar en emulador API 36.</li>
+<li>Tomar capturas para el informe.</li>
+<li>Cambiar wallpaper y capturar Material You.</li>
+<li>Subir a GitHub con minimo 4 commits reales de los integrantes.</li>
+<li>Exportar el informe final a PDF con portada, capturas, bibliografia APA y anexo de codigo.</li>
+</ul>
+<h2>4. Donde podria pedir cambios el profesor</h2>
+<h3>Cambio 1: Agregar un nuevo campo al formulario</h3>
+<p>Ejemplo: agregar <code>origen</code> o <code>presupuesto</code>.</p>
+<p>Archivos a tocar:</p>
+<ul>
+<li><code>PreferenciaViaje.kt</code>: agregar propiedad con <code>val</code>.</li>
+<li><code>EcoTripUiState.kt</code>: agregar estado, validacion y construccion de <code>PreferenciaViaje</code>.</li>
+<li><code>EcoTripViewModel.kt</code>: agregar clave en <code>SavedStateHandle</code> y funcion <code>actualizar...</code>.</li>
+<li><code>PreferenciaViajeRepository.kt</code>: agregar key de DataStore.</li>
+<li><code>EcoTripScreens.kt</code>: agregar <code>OutlinedTextField</code>.</li>
+<li><code>EcoTripRoutes.kt</code> y <code>EcoTripApp.kt</code>: agregar parametro si debe viajar al resumen.</li>
+</ul>
+<h3>Cambio 2: Cambiar rango de dias validos</h3>
+<p>Ejemplo: de 1..30 a 1..15.</p>
+<p>Archivo principal:</p>
+<ul>
+<li><code>EcoTripUiState.kt</code></li>
+</ul>
+<p>Cambiar:</p>
+<p>```kotlin</p>
+<p>diasDuracion?.let { it in 1..30 } == true</p>
+<p>```</p>
+<p>por:</p>
+<p>```kotlin</p>
+<p>diasDuracion?.let { it in 1..15 } == true</p>
+<p>```</p>
+<p>Tambien conviene actualizar el texto de error en <code>EcoTripScreens.kt</code>.</p>
+<h3>Cambio 3: Agregar otro transporte ecologico</h3>
+<p>Ejemplo: <code>BusElectrico</code>.</p>
+<p>Archivos:</p>
+<ul>
+<li><code>PreferenciaViaje.kt</code>: agregar entrada al enum.</li>
+<li><code>generarRecomendacionRuta()</code>: agregar caso al <code>when</code>.</li>
+</ul>
+<p>La UI se actualiza automaticamente porque recorre <code>TipoTransporteEcologico.entries</code>.</p>
+<h3>Cambio 4: Cambiar la navegacion para pasar un objeto completo</h3>
+<p>Actualmente se pasan parametros estrictos en <code>ResumenRutaRoute</code>. Si pide pasar objeto completo, la ruta podria recibir un JSON serializado o una clase serializable con todos los campos. La explicacion tecnica seria que ambas formas son type-safe si el contrato esta definido con clases <code>@Serializable</code>.</p>
+<p>Archivos:</p>
+<ul>
+<li><code>EcoTripRoutes.kt</code></li>
+<li><code>EcoTripApp.kt</code></li>
+<li><code>EcoTripScreens.kt</code></li>
+</ul>
+<h3>Cambio 5: Agregar boton para limpiar formulario</h3>
+<p>Archivos:</p>
+<ul>
+<li><code>EcoTripViewModel.kt</code>: crear <code>limpiarFormulario()</code>.</li>
+<li><code>EcoTripScreens.kt</code>: agregar boton en TopAppBar o FAB secundario.</li>
+</ul>
+<p>La funcion debe poner claves del <code>SavedStateHandle</code> en valores vacios y restaurar defaults.</p>
+<h3>Cambio 6: Modificar persistencia para guardar solo preferencias globales</h3>
+<p>Si el profesor es estricto con &quot;DataStore solo preferencias globales&quot;, se puede dejar en DataStore solamente <code>tipoTransporte</code> y <code>soloRutasBajaHuella</code>, mientras <code>SavedStateHandle</code> conserva destino y duracion.</p>
+<p>Archivo:</p>
+<ul>
+<li><code>PreferenciaViajeRepository.kt</code></li>
+</ul>
+<p>Eso no rompe la arquitectura: DataStore queda para disco permanente y SavedStateHandle para estado temporal de formulario.</p>
+<h3>Cambio 7: Demostrar Material You</h3>
+<p>Si pide cambiar colores hardcoded, responder que la app usa <code>MaterialTheme.colorScheme</code>. Los lugares principales estan en:</p>
+<ul>
+<li><code>Theme.kt</code></li>
+<li><code>EcoTripScreens.kt</code></li>
+</ul>
+<p>No se deben poner colores hexadecimales directamente en las pantallas.</p>
+<h2>5. Respuestas cortas para defensa oral</h2>
+<p>**Que diferencia hay entre ViewModel, SavedStateHandle y DataStore?**</p>
+<p>ViewModel mantiene estado en memoria mientras el proceso vive. SavedStateHandle sobrevive recreaciones y muerte de proceso porque guarda un bundle de estado. DataStore persiste en disco y mantiene datos aun si la app se cierra por completo.</p>
+<p>**Que es UDF?**</p>
+<p>Flujo Unidireccional de Datos: la UI envia eventos al ViewModel y el ViewModel emite estado hacia la UI. La pantalla no decide la logica de negocio.</p>
+<p>**Por que Navigation type-safe reduce crashes?**</p>
+<p>Porque los destinos se declaran como clases serializables con parametros obligatorios. Si falta un parametro o tiene tipo incorrecto, el error aparece antes o queda localizado en compilacion/desarrollo, no como una clave String mal escrita en runtime.</p>
+<p>**Por que se usa toIntOrNull()?**</p>
+<p>Porque un campo numerico puede estar vacio o contener datos invalidos. <code>toIntOrNull()</code> devuelve null en vez de lanzar excepcion, evitando cierres forzados.</p>
+<p>**Por que usar MaterialTheme.colorScheme?**</p>
+<p>Porque conecta la interfaz con los roles semanticos de Material 3 y permite que Android aplique color dinamico segun el wallpaper.</p>
+<h2>6. Comandos de verificacion</h2>
+<p>```powershell</p>
+<p>.\gradlew.bat testDebugUnitTest</p>
+<p>.\gradlew.bat assembleDebug</p>
+<p>```</p>
+<p>La compilacion debe terminar con <code>BUILD SUCCESSFUL</code>.</p>
+</body></html>
