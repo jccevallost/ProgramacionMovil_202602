@@ -7,6 +7,9 @@ data object FormularioViajeRoute
 
 @Serializable
 data class ResumenRutaRoute(
-    val origen: String,
-    val destino: String
+    val nombreViajero: String,
+    val destino: String,
+    val diasDuracion: Int,
+    val tipoTransporte: String,
+    val soloRutasBajaHuella: Boolean
 )

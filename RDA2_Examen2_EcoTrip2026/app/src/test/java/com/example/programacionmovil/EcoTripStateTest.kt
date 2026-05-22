@@ -1,7 +1,7 @@
 package com.example.programacionmovil
 
 import com.example.programacionmovil.data.PreferenciaViaje
-import com.example.programacionmovil.data.PrioridadRuta
+import com.example.programacionmovil.data.TipoTransporteEcologico
 import com.example.programacionmovil.data.generarRecomendacionRuta
 import com.example.programacionmovil.ui.EcoTripUiState
 import org.junit.Assert.assertEquals
@@ -15,29 +15,27 @@ class EcoTripStateTest {
     @Test
     fun formularioValidoConstruyePreferenciaSegura() {
         val state = EcoTripUiState(
-            origen = "Quito",
+            nombreViajero = "Ana",
             destino = "Cuenca",
-            diasTexto = "4",
-            presupuestoTexto = "350",
-            prioridad = PrioridadRuta.Balanceada,
-            incluirHospedajeEco = true
+            diasDuracionTexto = "4",
+            tipoTransporte = TipoTransporteEcologico.Tren,
+            soloRutasBajaHuella = true
         )
 
         val preferencia = state.preferenciaValida
 
         assertTrue(state.esValido)
         assertNotNull(preferencia)
-        assertEquals(4, preferencia?.dias)
-        assertEquals(350, preferencia?.presupuesto)
+        assertEquals(4, preferencia?.diasDuracion)
+        assertEquals(TipoTransporteEcologico.Tren, preferencia?.tipoTransporte)
     }
 
     @Test
-    fun entradasNumericasInvalidasNoGeneranPreferencia() {
+    fun entradaNumericaInvalidaNoGeneraPreferencia() {
         val state = EcoTripUiState(
-            origen = "Quito",
+            nombreViajero = "Luis",
             destino = "Loja",
-            diasTexto = "abc",
-            presupuestoTexto = "10"
+            diasDuracionTexto = "abc"
         )
 
         assertFalse(state.esValido)
@@ -45,19 +43,18 @@ class EcoTripStateTest {
     }
 
     @Test
-    fun recomendacionRespetaPresupuestoDisponible() {
+    fun recomendacionProduceResumenConEmisionesNoNegativas() {
         val preferencia = PreferenciaViaje(
-            origen = "Manta",
+            nombreViajero = "Maya",
             destino = "Tena",
-            dias = 3,
-            presupuesto = 220,
-            prioridad = PrioridadRuta.Ecologica,
-            incluirHospedajeEco = true
+            diasDuracion = 3,
+            tipoTransporte = TipoTransporteEcologico.Bicicleta,
+            soloRutasBajaHuella = true
         )
 
         val recomendacion = generarRecomendacionRuta(preferencia)
 
-        assertTrue(recomendacion.costoEstimado in 1..preferencia.presupuesto)
+        assertTrue(recomendacion.emisionesKg >= 0)
         assertTrue(recomendacion.distanciaKm > 0)
         assertTrue(recomendacion.segmentos.isNotEmpty())
     }

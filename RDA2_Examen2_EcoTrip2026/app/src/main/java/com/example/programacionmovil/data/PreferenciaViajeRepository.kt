@@ -29,32 +29,29 @@ class PreferenciaViajeRepository(context: Context) {
         }
         .map { preferences ->
             PreferenciaViaje(
-                origen = preferences[Keys.ORIGEN].orEmpty(),
+                nombreViajero = preferences[Keys.NOMBRE_VIAJERO].orEmpty(),
                 destino = preferences[Keys.DESTINO].orEmpty(),
-                dias = preferences[Keys.DIAS] ?: 0,
-                presupuesto = preferences[Keys.PRESUPUESTO] ?: 0,
-                prioridad = PrioridadRuta.fromName(preferences[Keys.PRIORIDAD]),
-                incluirHospedajeEco = preferences[Keys.HOSPEDAJE_ECO] ?: true
+                diasDuracion = preferences[Keys.DIAS_DURACION] ?: 0,
+                tipoTransporte = TipoTransporteEcologico.fromName(preferences[Keys.TIPO_TRANSPORTE]),
+                soloRutasBajaHuella = preferences[Keys.SOLO_RUTAS_BAJA_HUELLA] ?: true
             )
         }
 
     suspend fun guardar(preferencia: PreferenciaViaje) {
         dataStore.edit { preferences ->
-            preferences[Keys.ORIGEN] = preferencia.origen.trim()
+            preferences[Keys.NOMBRE_VIAJERO] = preferencia.nombreViajero.trim()
             preferences[Keys.DESTINO] = preferencia.destino.trim()
-            preferences[Keys.DIAS] = preferencia.dias
-            preferences[Keys.PRESUPUESTO] = preferencia.presupuesto
-            preferences[Keys.PRIORIDAD] = preferencia.prioridad.name
-            preferences[Keys.HOSPEDAJE_ECO] = preferencia.incluirHospedajeEco
+            preferences[Keys.DIAS_DURACION] = preferencia.diasDuracion
+            preferences[Keys.TIPO_TRANSPORTE] = preferencia.tipoTransporte.name
+            preferences[Keys.SOLO_RUTAS_BAJA_HUELLA] = preferencia.soloRutasBajaHuella
         }
     }
 
     private object Keys {
-        val ORIGEN = stringPreferencesKey("origen")
+        val NOMBRE_VIAJERO = stringPreferencesKey("nombre_viajero")
         val DESTINO = stringPreferencesKey("destino")
-        val DIAS = intPreferencesKey("dias")
-        val PRESUPUESTO = intPreferencesKey("presupuesto")
-        val PRIORIDAD = stringPreferencesKey("prioridad")
-        val HOSPEDAJE_ECO = booleanPreferencesKey("hospedaje_eco")
+        val DIAS_DURACION = intPreferencesKey("dias_duracion")
+        val TIPO_TRANSPORTE = stringPreferencesKey("tipo_transporte")
+        val SOLO_RUTAS_BAJA_HUELLA = booleanPreferencesKey("solo_rutas_baja_huella")
     }
 }

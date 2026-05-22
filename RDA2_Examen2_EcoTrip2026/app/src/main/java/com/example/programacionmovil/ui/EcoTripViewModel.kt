@@ -10,7 +10,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.programacionmovil.data.PreferenciaViaje
 import com.example.programacionmovil.data.PreferenciaViajeRepository
-import com.example.programacionmovil.data.PrioridadRuta
+import com.example.programacionmovil.data.TipoTransporteEcologico
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -26,22 +26,21 @@ class EcoTripViewModel(
     private val mensaje = MutableStateFlow<String?>(null)
 
     private val camposTexto = combine(
-        savedStateHandle.getStateFlow(KEY_ORIGEN, ""),
+        savedStateHandle.getStateFlow(KEY_NOMBRE_VIAJERO, ""),
         savedStateHandle.getStateFlow(KEY_DESTINO, ""),
-        savedStateHandle.getStateFlow(KEY_DIAS, ""),
-        savedStateHandle.getStateFlow(KEY_PRESUPUESTO, "")
-    ) { origen, destino, dias, presupuesto ->
-        CamposTexto(origen, destino, dias, presupuesto)
+        savedStateHandle.getStateFlow(KEY_DIAS_DURACION, "")
+    ) { nombreViajero, destino, diasDuracion ->
+        CamposTexto(nombreViajero, destino, diasDuracion)
     }
 
     private val seleccion = combine(
-        savedStateHandle.getStateFlow(KEY_PRIORIDAD, PrioridadRuta.Ecologica.name),
-        savedStateHandle.getStateFlow(KEY_HOSPEDAJE_ECO, true),
+        savedStateHandle.getStateFlow(KEY_TIPO_TRANSPORTE, TipoTransporteEcologico.Tren.name),
+        savedStateHandle.getStateFlow(KEY_SOLO_RUTAS_BAJA_HUELLA, true),
         savedStateHandle.getStateFlow(KEY_INTENTO_ENVIO, false)
-    ) { prioridad, hospedajeEco, intentoEnvio ->
+    ) { tipoTransporte, soloRutasBajaHuella, intentoEnvio ->
         Seleccion(
-            prioridad = PrioridadRuta.fromName(prioridad),
-            incluirHospedajeEco = hospedajeEco,
+            tipoTransporte = TipoTransporteEcologico.fromName(tipoTransporte),
+            soloRutasBajaHuella = soloRutasBajaHuella,
             intentoEnvio = intentoEnvio
         )
     }
@@ -52,12 +51,11 @@ class EcoTripViewModel(
             guardando,
             mensaje ->
         EcoTripUiState(
-            origen = campos.origen,
+            nombreViajero = campos.nombreViajero,
             destino = campos.destino,
-            diasTexto = campos.dias,
-            presupuestoTexto = campos.presupuesto,
-            prioridad = seleccion.prioridad,
-            incluirHospedajeEco = seleccion.incluirHospedajeEco,
+            diasDuracionTexto = campos.diasDuracion,
+            tipoTransporte = seleccion.tipoTransporte,
+            soloRutasBajaHuella = seleccion.soloRutasBajaHuella,
             guardando = guardando,
             intentoEnvio = seleccion.intentoEnvio,
             mensaje = mensaje
@@ -72,39 +70,34 @@ class EcoTripViewModel(
         viewModelScope.launch {
             val preferencia = repository.preferenciaViaje.first()
             if (debeRestaurarDesdeDisco(preferencia)) {
-                savedStateHandle[KEY_ORIGEN] = preferencia.origen
+                savedStateHandle[KEY_NOMBRE_VIAJERO] = preferencia.nombreViajero
                 savedStateHandle[KEY_DESTINO] = preferencia.destino
-                savedStateHandle[KEY_DIAS] = preferencia.dias.toString()
-                savedStateHandle[KEY_PRESUPUESTO] = preferencia.presupuesto.toString()
-                savedStateHandle[KEY_PRIORIDAD] = preferencia.prioridad.name
-                savedStateHandle[KEY_HOSPEDAJE_ECO] = preferencia.incluirHospedajeEco
+                savedStateHandle[KEY_DIAS_DURACION] = preferencia.diasDuracion.toString()
+                savedStateHandle[KEY_TIPO_TRANSPORTE] = preferencia.tipoTransporte.name
+                savedStateHandle[KEY_SOLO_RUTAS_BAJA_HUELLA] = preferencia.soloRutasBajaHuella
             }
             savedStateHandle[KEY_RESTAURADO_DESDE_DISCO] = true
         }
     }
 
-    fun actualizarOrigen(value: String) {
-        savedStateHandle[KEY_ORIGEN] = value.take(MAX_TEXTO_CIUDAD)
+    fun actualizarNombreViajero(value: String) {
+        savedStateHandle[KEY_NOMBRE_VIAJERO] = value.take(MAX_TEXTO_CORTO)
     }
 
     fun actualizarDestino(value: String) {
-        savedStateHandle[KEY_DESTINO] = value.take(MAX_TEXTO_CIUDAD)
+        savedStateHandle[KEY_DESTINO] = value.take(MAX_TEXTO_CORTO)
     }
 
-    fun actualizarDias(value: String) {
-        savedStateHandle[KEY_DIAS] = value.filter(Char::isDigit).take(MAX_DIAS_DIGITOS)
+    fun actualizarDiasDuracion(value: String) {
+        savedStateHandle[KEY_DIAS_DURACION] = value.filter(Char::isDigit).take(MAX_DIAS_DIGITOS)
     }
 
-    fun actualizarPresupuesto(value: String) {
-        savedStateHandle[KEY_PRESUPUESTO] = value.filter(Char::isDigit).take(MAX_PRESUPUESTO_DIGITOS)
+    fun actualizarTipoTransporte(value: TipoTransporteEcologico) {
+        savedStateHandle[KEY_TIPO_TRANSPORTE] = value.name
     }
 
-    fun actualizarPrioridad(value: PrioridadRuta) {
-        savedStateHandle[KEY_PRIORIDAD] = value.name
-    }
-
-    fun actualizarHospedajeEco(value: Boolean) {
-        savedStateHandle[KEY_HOSPEDAJE_ECO] = value
+    fun actualizarSoloRutasBajaHuella(value: Boolean) {
+        savedStateHandle[KEY_SOLO_RUTAS_BAJA_HUELLA] = value
     }
 
     fun guardarPreferencia(preferencia: PreferenciaViaje) {
@@ -137,21 +130,19 @@ class EcoTripViewModel(
     }
 
     private fun formularioActualVacio(): Boolean =
-        savedStateHandle.get<String>(KEY_ORIGEN).isNullOrBlank() &&
+        savedStateHandle.get<String>(KEY_NOMBRE_VIAJERO).isNullOrBlank() &&
             savedStateHandle.get<String>(KEY_DESTINO).isNullOrBlank() &&
-            savedStateHandle.get<String>(KEY_DIAS).isNullOrBlank() &&
-            savedStateHandle.get<String>(KEY_PRESUPUESTO).isNullOrBlank()
+            savedStateHandle.get<String>(KEY_DIAS_DURACION).isNullOrBlank()
 
     private data class CamposTexto(
-        val origen: String,
+        val nombreViajero: String,
         val destino: String,
-        val dias: String,
-        val presupuesto: String
+        val diasDuracion: String
     )
 
     private data class Seleccion(
-        val prioridad: PrioridadRuta,
-        val incluirHospedajeEco: Boolean,
+        val tipoTransporte: TipoTransporteEcologico,
+        val soloRutasBajaHuella: Boolean,
         val intentoEnvio: Boolean
     )
 
@@ -166,16 +157,14 @@ class EcoTripViewModel(
             }
         }
 
-        private const val KEY_ORIGEN = "origen"
+        private const val KEY_NOMBRE_VIAJERO = "nombre_viajero"
         private const val KEY_DESTINO = "destino"
-        private const val KEY_DIAS = "dias"
-        private const val KEY_PRESUPUESTO = "presupuesto"
-        private const val KEY_PRIORIDAD = "prioridad"
-        private const val KEY_HOSPEDAJE_ECO = "hospedaje_eco"
+        private const val KEY_DIAS_DURACION = "dias_duracion"
+        private const val KEY_TIPO_TRANSPORTE = "tipo_transporte"
+        private const val KEY_SOLO_RUTAS_BAJA_HUELLA = "solo_rutas_baja_huella"
         private const val KEY_INTENTO_ENVIO = "intento_envio"
         private const val KEY_RESTAURADO_DESDE_DISCO = "restaurado_desde_disco"
-        private const val MAX_TEXTO_CIUDAD = 40
+        private const val MAX_TEXTO_CORTO = 40
         private const val MAX_DIAS_DIGITOS = 2
-        private const val MAX_PRESUPUESTO_DIGITOS = 6
     }
 }

@@ -22,20 +22,22 @@ fun EcoTripApp(viewModel: EcoTripViewModel) {
         composable<FormularioViajeRoute> {
             FormularioViajeScreen(
                 state = state,
-                onOrigenChange = viewModel::actualizarOrigen,
+                onNombreViajeroChange = viewModel::actualizarNombreViajero,
                 onDestinoChange = viewModel::actualizarDestino,
-                onDiasChange = viewModel::actualizarDias,
-                onPresupuestoChange = viewModel::actualizarPresupuesto,
-                onPrioridadChange = viewModel::actualizarPrioridad,
-                onHospedajeEcoChange = viewModel::actualizarHospedajeEco,
+                onDiasDuracionChange = viewModel::actualizarDiasDuracion,
+                onTipoTransporteChange = viewModel::actualizarTipoTransporte,
+                onSoloRutasBajaHuellaChange = viewModel::actualizarSoloRutasBajaHuella,
                 onFormularioInvalido = viewModel::marcarFormularioInvalido,
                 onMensajeMostrado = viewModel::consumirMensaje,
                 onPlanificar = { preferencia ->
                     viewModel.guardarPreferencia(preferencia)
                     navController.navigate(
                         ResumenRutaRoute(
-                            origen = preferencia.origen,
-                            destino = preferencia.destino
+                            nombreViajero = preferencia.nombreViajero,
+                            destino = preferencia.destino,
+                            diasDuracion = preferencia.diasDuracion,
+                            tipoTransporte = preferencia.tipoTransporte.name,
+                            soloRutasBajaHuella = preferencia.soloRutasBajaHuella
                         )
                     ) {
                         launchSingleTop = true
@@ -50,7 +52,6 @@ fun EcoTripApp(viewModel: EcoTripViewModel) {
             val route = backStackEntry.toRoute<ResumenRutaRoute>()
             ResumenRutaScreen(
                 route = route,
-                state = state,
                 onEditar = {
                     navController.navigate(FormularioViajeRoute) {
                         launchSingleTop = true

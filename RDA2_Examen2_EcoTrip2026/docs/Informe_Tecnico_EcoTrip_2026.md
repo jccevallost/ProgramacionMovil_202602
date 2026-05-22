@@ -23,7 +23,7 @@ EcoTrip 2026 resuelve este problema mediante una arquitectura declarativa con Je
 
 La aplicacion se organiza en tres capas principales:
 
-- **Modelo y dominio:** `PreferenciaViaje`, `PrioridadRuta` y `generarRecomendacionRuta`.
+- **Modelo y dominio:** `PreferenciaViaje`, `TipoTransporteEcologico` y `generarRecomendacionRuta`.
 - **Persistencia:** `PreferenciaViajeRepository`, construido sobre Preferences DataStore.
 - **Estado y UI:** `EcoTripViewModel`, `EcoTripUiState`, pantallas Compose y grafo de navegacion tipado.
 
@@ -45,13 +45,13 @@ EcoTripViewModel
 PreferenciaViaje
 ```
 
-`PreferenciaViaje` representa los datos limpios del viaje: origen, destino, dias, presupuesto, prioridad y hospedaje eco. El `ViewModel` eleva el estado de los campos y expone un `StateFlow` para Compose. `SavedStateHandle` guarda cada campo de entrada para sobrevivir a recreaciones y muerte del proceso. `DataStore` persiste la ultima preferencia valida en disco para mantenerla aun despues de cerrar totalmente la aplicacion.
+`PreferenciaViaje` representa los datos limpios exigidos por la guia: nombre del viajero, destino, duracion en dias, tipo de transporte ecologico y preferencia por rutas de baja huella de carbono. El `ViewModel` eleva el estado de los campos y expone un `StateFlow` para Compose. `SavedStateHandle` guarda cada campo de entrada para sobrevivir a recreaciones y muerte del proceso. `DataStore` persiste la ultima preferencia valida en disco para mantenerla aun despues de cerrar totalmente la aplicacion.
 
 ## Resiliencia Multinivel
 
 **Memoria - ViewModel:** conserva el estado durante recomposiciones y rotaciones normales mientras el proceso sigue vivo.
 
-**Proceso - SavedStateHandle:** almacena los valores del formulario como claves simples. Si Android elimina el proceso y restaura la actividad, el formulario recupera origen, destino, dias, presupuesto, prioridad y estado del switch.
+**Proceso - SavedStateHandle:** almacena los valores del formulario como claves simples. Si Android elimina el proceso y restaura la actividad, el formulario recupera nombre del viajero, destino, dias de duracion, transporte seleccionado y estado del switch.
 
 **Disco - DataStore:** guarda la ultima `PreferenciaViaje` valida al planificar la ruta. Al abrir nuevamente la app, el repositorio emite esos valores y el ViewModel los usa para hidratar el formulario si no existe un estado de proceso previo.
 
@@ -60,9 +60,9 @@ PreferenciaViaje
 El grafo usa rutas `@Serializable`:
 
 - `FormularioViajeRoute`
-- `ResumenRutaRoute(origen, destino)`
+- `ResumenRutaRoute(nombreViajero, destino, diasDuracion, tipoTransporte, soloRutasBajaHuella)`
 
-La navegacion fuertemente tipada reduce errores porque el compilador valida la forma de cada destino y sus parametros. En el enfoque antiguo con Strings o Bundles manuales, un typo en una clave, un tipo incorrecto o un argumento faltante podia provocar errores en tiempo de ejecucion. Con rutas serializables, los parametros forman parte del contrato del destino y se construyen como objetos Kotlin, lo que elimina claves magicas y mejora el mantenimiento.
+La navegacion fuertemente tipada reduce errores porque el compilador valida la forma de cada destino y sus parametros. En el enfoque antiguo con Strings o Bundles manuales, un typo en una clave, un tipo incorrecto o un argumento faltante podia provocar errores en tiempo de ejecucion. Con rutas serializables, los parametros forman parte del contrato del destino y se construyen como objetos Kotlin, lo que elimina claves magicas y mejora el mantenimiento. En esta app, la pantalla de resumen exige parametros estrictos: nombre, destino, dias, transporte y bandera de baja huella.
 
 La higiene del Back Stack se aplica con `popUpTo<FormularioViajeRoute>` y `launchSingleTop`, evitando duplicados innecesarios al navegar entre formulario y resumen.
 

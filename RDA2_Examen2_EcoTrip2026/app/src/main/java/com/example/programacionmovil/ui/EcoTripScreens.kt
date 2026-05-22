@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -31,6 +30,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,7 +42,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.programacionmovil.data.PreferenciaViaje
-import com.example.programacionmovil.data.PrioridadRuta
+import com.example.programacionmovil.data.TipoTransporteEcologico
 import com.example.programacionmovil.data.generarRecomendacionRuta
 import com.example.programacionmovil.navigation.ResumenRutaRoute
 
@@ -50,12 +50,11 @@ import com.example.programacionmovil.navigation.ResumenRutaRoute
 @Composable
 fun FormularioViajeScreen(
     state: EcoTripUiState,
-    onOrigenChange: (String) -> Unit,
+    onNombreViajeroChange: (String) -> Unit,
     onDestinoChange: (String) -> Unit,
-    onDiasChange: (String) -> Unit,
-    onPresupuestoChange: (String) -> Unit,
-    onPrioridadChange: (PrioridadRuta) -> Unit,
-    onHospedajeEcoChange: (Boolean) -> Unit,
+    onDiasDuracionChange: (String) -> Unit,
+    onTipoTransporteChange: (TipoTransporteEcologico) -> Unit,
+    onSoloRutasBajaHuellaChange: (Boolean) -> Unit,
     onFormularioInvalido: () -> Unit,
     onMensajeMostrado: () -> Unit,
     onPlanificar: (PreferenciaViaje) -> Unit
@@ -120,12 +119,12 @@ fun FormularioViajeScreen(
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        text = "Formulario de viaje",
+                        text = "Configuracion del viaje",
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = "Origen, destino y preferencias locales",
+                        text = "Estado resiliente ante rotacion y muerte del proceso",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -142,16 +141,16 @@ fun FormularioViajeScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         OutlinedTextField(
-                            value = state.origen,
-                            onValueChange = onOrigenChange,
-                            label = { Text("Origen") },
+                            value = state.nombreViajero,
+                            onValueChange = onNombreViajeroChange,
+                            label = { Text("Nombre del viajero") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
-                            isError = state.intentoEnvio && !state.origenValido,
+                            isError = state.intentoEnvio && !state.nombreValido,
                             supportingText = {
                                 ErrorText(
-                                    visible = state.intentoEnvio && !state.origenValido,
-                                    text = "Ingrese la ciudad de salida"
+                                    visible = state.intentoEnvio && !state.nombreValido,
+                                    text = "Ingrese el nombre"
                                 )
                             }
                         )
@@ -165,42 +164,25 @@ fun FormularioViajeScreen(
                             supportingText = {
                                 ErrorText(
                                     visible = state.intentoEnvio && !state.destinoValido,
-                                    text = "Ingrese la ciudad de llegada"
+                                    text = "Ingrese el destino"
                                 )
                             }
                         )
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            OutlinedTextField(
-                                value = state.diasTexto,
-                                onValueChange = onDiasChange,
-                                label = { Text("Dias") },
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.weight(1f),
-                                isError = state.intentoEnvio && !state.diasValidos,
-                                supportingText = {
-                                    ErrorText(
-                                        visible = state.intentoEnvio && !state.diasValidos,
-                                        text = "1 a 30"
-                                    )
-                                }
-                            )
-                            OutlinedTextField(
-                                value = state.presupuestoTexto,
-                                onValueChange = onPresupuestoChange,
-                                label = { Text("USD") },
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.weight(1f),
-                                isError = state.intentoEnvio && !state.presupuestoValido,
-                                supportingText = {
-                                    ErrorText(
-                                        visible = state.intentoEnvio && !state.presupuestoValido,
-                                        text = "Min. 50"
-                                    )
-                                }
-                            )
-                        }
+                        OutlinedTextField(
+                            value = state.diasDuracionTexto,
+                            onValueChange = onDiasDuracionChange,
+                            label = { Text("Duracion en dias") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = state.intentoEnvio && !state.diasValidos,
+                            supportingText = {
+                                ErrorText(
+                                    visible = state.intentoEnvio && !state.diasValidos,
+                                    text = "Ingrese un valor entre 1 y 30"
+                                )
+                            }
+                        )
                     }
                 }
             }
@@ -215,7 +197,7 @@ fun FormularioViajeScreen(
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         Text(
-                            text = "Preferencia de ruta",
+                            text = "Transporte ecologico",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
@@ -223,11 +205,11 @@ fun FormularioViajeScreen(
                             modifier = Modifier.horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            PrioridadRuta.entries.forEach { prioridad ->
+                            TipoTransporteEcologico.entries.forEach { transporte ->
                                 FilterChip(
-                                    selected = state.prioridad == prioridad,
-                                    onClick = { onPrioridadChange(prioridad) },
-                                    label = { Text(prioridad.etiqueta) }
+                                    selected = state.tipoTransporte == transporte,
+                                    onClick = { onTipoTransporteChange(transporte) },
+                                    label = { Text(transporte.etiqueta) }
                                 )
                             }
                         }
@@ -238,19 +220,19 @@ fun FormularioViajeScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Hospedaje eco",
+                                    text = "Solo rutas de baja huella",
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
                                 Text(
-                                    text = "Se incluye en el presupuesto",
+                                    text = "Preferencia global persistida en disco",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.78f)
                                 )
                             }
                             Switch(
-                                checked = state.incluirHospedajeEco,
-                                onCheckedChange = onHospedajeEcoChange
+                                checked = state.soloRutasBajaHuella,
+                                onCheckedChange = onSoloRutasBajaHuellaChange
                             )
                         }
                     }
@@ -264,18 +246,23 @@ fun FormularioViajeScreen(
 @Composable
 fun ResumenRutaScreen(
     route: ResumenRutaRoute,
-    state: EcoTripUiState,
     onEditar: () -> Unit
 ) {
-    val preferencia = state.preferenciaValida
-    val recomendacion = preferencia?.let(::generarRecomendacionRuta)
+    val preferencia = PreferenciaViaje(
+        nombreViajero = route.nombreViajero,
+        destino = route.destino,
+        diasDuracion = route.diasDuracion,
+        tipoTransporte = TipoTransporteEcologico.fromName(route.tipoTransporte),
+        soloRutasBajaHuella = route.soloRutasBajaHuella
+    )
+    val recomendacion = generarRecomendacionRuta(preferencia)
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Resumen de ruta",
+                        text = "Resumen tipado",
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -283,7 +270,12 @@ fun ResumenRutaScreen(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                )
+                ),
+                actions = {
+                    TextButton(onClick = onEditar) {
+                        Text("Salir")
+                    }
+                }
             )
         },
         floatingActionButton = {
@@ -307,125 +299,104 @@ fun ResumenRutaScreen(
             contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            if (preferencia == null || recomendacion == null) {
-                item {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
-                        color = MaterialTheme.colorScheme.errorContainer
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(18.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "${route.origen} -> ${route.destino}",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                            Text(
-                                text = "Complete los datos para calcular la ruta.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
-                    }
-                }
-            } else {
-                item {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(20.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = recomendacion.titulo,
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                text = preferencia.prioridad.descripcion,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-                }
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        MetricCard(
-                            label = "Dias",
-                            value = preferencia.dias.toString(),
-                            modifier = Modifier.weight(1f)
-                        )
-                        MetricCard(
-                            label = "Costo",
-                            value = "$${recomendacion.costoEstimado}",
-                            modifier = Modifier.weight(1f)
-                        )
-                        MetricCard(
-                            label = "CO2",
-                            value = "${recomendacion.emisionesKg} kg",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-                item {
-                    ElevatedCard(
-                        colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                            ListItem(
-                                headlineContent = { Text("Distancia estimada") },
-                                supportingContent = { Text("${recomendacion.distanciaKm} km") }
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            ListItem(
-                                headlineContent = { Text("Presupuesto disponible") },
-                                supportingContent = { Text("$${preferencia.presupuesto}") }
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            ListItem(
-                                headlineContent = { Text("Hospedaje eco") },
-                                supportingContent = {
-                                    Text(if (preferencia.incluirHospedajeEco) "Incluido" else "No incluido")
-                                }
-                            )
-                        }
-                    }
-                }
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            text = "Tramos sugeridos",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onBackground
+                            text = recomendacion.titulo,
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
-                        Row(
-                            modifier = Modifier.horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            recomendacion.segmentos.forEach { segmento ->
-                                AssistChip(
-                                    onClick = {},
-                                    label = { Text(segmento) }
-                                )
+                        Text(
+                            text = preferencia.tipoTransporte.descripcion,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    MetricCard(
+                        label = "Dias",
+                        value = preferencia.diasDuracion.toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+                    MetricCard(
+                        label = "CO2",
+                        value = "${recomendacion.emisionesKg} kg",
+                        modifier = Modifier.weight(1f)
+                    )
+                    MetricCard(
+                        label = "Ahorro",
+                        value = "${recomendacion.ahorroEstimadoKg} kg",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            item {
+                ElevatedCard(
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                        ListItem(
+                            headlineContent = { Text("Viajero") },
+                            supportingContent = { Text(preferencia.nombreViajero) }
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        ListItem(
+                            headlineContent = { Text("Destino") },
+                            supportingContent = { Text(preferencia.destino) }
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        ListItem(
+                            headlineContent = { Text("Transporte") },
+                            supportingContent = { Text(preferencia.tipoTransporte.etiqueta) }
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        ListItem(
+                            headlineContent = { Text("Rutas de baja huella") },
+                            supportingContent = {
+                                Text(if (preferencia.soloRutasBajaHuella) "Activadas" else "Opcionales")
                             }
+                        )
+                    }
+                }
+            }
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "Tramos sugeridos",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        recomendacion.segmentos.forEach { segmento ->
+                            AssistChip(
+                                onClick = {},
+                                label = { Text(segmento) }
+                            )
                         }
                     }
                 }
-                item {
-                    Spacer(modifier = Modifier.height(72.dp))
-                }
+            }
+            item {
+                Spacer(modifier = Modifier.height(72.dp))
             }
         }
     }

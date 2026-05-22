@@ -1,52 +1,43 @@
 package com.example.programacionmovil.ui
 
 import com.example.programacionmovil.data.PreferenciaViaje
-import com.example.programacionmovil.data.PrioridadRuta
+import com.example.programacionmovil.data.TipoTransporteEcologico
 
 data class EcoTripUiState(
-    val origen: String = "",
+    val nombreViajero: String = "",
     val destino: String = "",
-    val diasTexto: String = "",
-    val presupuestoTexto: String = "",
-    val prioridad: PrioridadRuta = PrioridadRuta.Ecologica,
-    val incluirHospedajeEco: Boolean = true,
+    val diasDuracionTexto: String = "",
+    val tipoTransporte: TipoTransporteEcologico = TipoTransporteEcologico.Tren,
+    val soloRutasBajaHuella: Boolean = true,
     val guardando: Boolean = false,
     val intentoEnvio: Boolean = false,
     val mensaje: String? = null
 ) {
-    val dias: Int?
-        get() = diasTexto.toIntOrNull()
+    val diasDuracion: Int?
+        get() = diasDuracionTexto.toIntOrNull()
 
-    val presupuesto: Int?
-        get() = presupuestoTexto.toIntOrNull()
-
-    val origenValido: Boolean
-        get() = origen.isNotBlank()
+    val nombreValido: Boolean
+        get() = nombreViajero.isNotBlank()
 
     val destinoValido: Boolean
         get() = destino.isNotBlank()
 
     val diasValidos: Boolean
-        get() = dias?.let { it in 1..30 } == true
-
-    val presupuestoValido: Boolean
-        get() = presupuesto?.let { it >= 50 } == true
+        get() = diasDuracion?.let { it in 1..30 } == true
 
     val esValido: Boolean
-        get() = origenValido && destinoValido && diasValidos && presupuestoValido
+        get() = nombreValido && destinoValido && diasValidos
 
     val preferenciaValida: PreferenciaViaje?
         get() {
-            val diasSeguros = dias ?: return null
-            val presupuestoSeguro = presupuesto ?: return null
+            val diasSeguros = diasDuracion ?: return null
             return if (esValido) {
                 PreferenciaViaje(
-                    origen = origen.trim(),
+                    nombreViajero = nombreViajero.trim(),
                     destino = destino.trim(),
-                    dias = diasSeguros,
-                    presupuesto = presupuestoSeguro,
-                    prioridad = prioridad,
-                    incluirHospedajeEco = incluirHospedajeEco
+                    diasDuracion = diasSeguros,
+                    tipoTransporte = tipoTransporte,
+                    soloRutasBajaHuella = soloRutasBajaHuella
                 )
             } else {
                 null
