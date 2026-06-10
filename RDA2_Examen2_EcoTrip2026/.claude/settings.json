@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(adb devices *)",
+      "Bash(./gradlew assembleDebug)",
+      "Read(//tmp/**)",
+      "Read(//c/Users/Asus_G16/AppData/Local/Temp/**)"
+    ]
+  }
+}
