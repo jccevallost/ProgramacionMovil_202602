@@ -83,7 +83,7 @@ Define rutas fuertemente tipadas con `@Serializable`:
 - `FormularioViajeRoute`
 - `ResumenRutaRoute`
 
-`ResumenRutaRoute` exige parametros estrictos: nombre, destino, dias, transporte y bandera de baja huella. Esto reduce errores porque el compilador verifica el contrato de navegacion.
+`ResumenRutaRoute` exige parametros estrictos: nombre, destino, dias, transporte, bandera de baja huella y `ticketCode`. Esto reduce errores porque el compilador verifica el contrato de navegacion.
 
 ### EcoTripApp.kt
 

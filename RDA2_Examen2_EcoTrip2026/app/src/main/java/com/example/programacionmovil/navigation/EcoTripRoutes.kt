@@ -11,5 +11,6 @@ data class ResumenRutaRoute(
     val destino: String,
     val diasDuracion: Int,
     val tipoTransporte: String,
-    val soloRutasBajaHuella: Boolean
+    val soloRutasBajaHuella: Boolean,
+    val ticketCode: String
 )

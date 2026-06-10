@@ -60,9 +60,9 @@ PreferenciaViaje
 El grafo usa rutas `@Serializable`:
 
 - `FormularioViajeRoute`
-- `ResumenRutaRoute(nombreViajero, destino, diasDuracion, tipoTransporte, soloRutasBajaHuella)`
+- `ResumenRutaRoute(nombreViajero, destino, diasDuracion, tipoTransporte, soloRutasBajaHuella, ticketCode)`
 
-La navegacion fuertemente tipada reduce errores porque el compilador valida la forma de cada destino y sus parametros. En el enfoque antiguo con Strings o Bundles manuales, un typo en una clave, un tipo incorrecto o un argumento faltante podia provocar errores en tiempo de ejecucion. Con rutas serializables, los parametros forman parte del contrato del destino y se construyen como objetos Kotlin, lo que elimina claves magicas y mejora el mantenimiento. En esta app, la pantalla de resumen exige parametros estrictos: nombre, destino, dias, transporte y bandera de baja huella.
+La navegacion fuertemente tipada reduce errores porque el compilador valida la forma de cada destino y sus parametros. En el enfoque antiguo con Strings o Bundles manuales, un typo en una clave, un tipo incorrecto o un argumento faltante podia provocar errores en tiempo de ejecucion. Con rutas serializables, los parametros forman parte del contrato del destino y se construyen como objetos Kotlin, lo que elimina claves magicas y mejora el mantenimiento. En esta app, la pantalla de resumen exige parametros estrictos: nombre, destino, dias, transporte, bandera de baja huella y codigo de boleto turistico.
 
 La higiene del Back Stack se aplica con `popUpTo<FormularioViajeRoute>` y `launchSingleTop`, evitando duplicados innecesarios al navegar entre formulario y resumen.
 

@@ -37,7 +37,8 @@ fun EcoTripApp(viewModel: EcoTripViewModel) {
                             destino = preferencia.destino,
                             diasDuracion = preferencia.diasDuracion,
                             tipoTransporte = preferencia.tipoTransporte.name,
-                            soloRutasBajaHuella = preferencia.soloRutasBajaHuella
+                            soloRutasBajaHuella = preferencia.soloRutasBajaHuella,
+                            ticketCode = "ECO-2026-XYZ"
                         )
                     ) {
                         launchSingleTop = true

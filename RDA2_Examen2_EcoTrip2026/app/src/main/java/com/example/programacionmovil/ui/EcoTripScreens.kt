@@ -45,6 +45,7 @@ import com.example.programacionmovil.data.PreferenciaViaje
 import com.example.programacionmovil.data.TipoTransporteEcologico
 import com.example.programacionmovil.data.generarRecomendacionRuta
 import com.example.programacionmovil.navigation.ResumenRutaRoute
+import kotlin.reflect.KFunction1
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +58,8 @@ fun FormularioViajeScreen(
     onSoloRutasBajaHuellaChange: (Boolean) -> Unit,
     onFormularioInvalido: () -> Unit,
     onMensajeMostrado: () -> Unit,
-    onPlanificar: (PreferenciaViaje) -> Unit
+    onPlanificar: (PreferenciaViaje) -> Unit,
+
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -240,6 +242,7 @@ fun FormularioViajeScreen(
             }
         }
     }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -371,6 +374,11 @@ fun ResumenRutaScreen(
                             supportingContent = {
                                 Text(if (preferencia.soloRutasBajaHuella) "Activadas" else "Opcionales")
                             }
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        ListItem(
+                            headlineContent = { Text("Código de Reserva") },
+                            supportingContent = { Text(route.ticketCode) }
                         )
                     }
                 }
